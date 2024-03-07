@@ -1,0 +1,92 @@
+*************************************************************************************************
+                    NFS Server and Client Configuration in Ubuntu
+*************************************************************************************************
+
+#STEPS TO CONFIGURE NFS
+
+#Setting up a NFS server with an NFS share
+#Installation of NFS Server in UBUNTU
+
+$sudo apt-get update
+$sudo apt install nfs-kernel-server
+
+#Creating a root NFS Directory
+Creating root directory of NFS shares also know as "Export Folder".
+
+$sudo mkdir /mnt/myshare
+
+Setting permissions so that any user can access the folder on the Client Machine.
+
+$sudo chown nobody:nogroup /mnt/myshare
+
+
+#Defining the access for NFS client in export file
+- To grant access to NFS client, I need to define an Export File ( Located at /etc/exports)
+- Editing the /etc/exports in a text editor, and add one of the following three directories.
+
+1) To enable to a Single Client:-  /mnt/myshare 10.0.2.15(rw,sync,no_subtree_check)
+
+2) to enable access to several users:-  /mnt/myshare {ClientIP-1}(rw,sync,no_subtree_check)
+                                                     {ClientIP-2}(rw,sync,no_subtree_check)
+                                                     {ClientIP-3}(rw,sync,no_subtree_check)
+                                                     ......
+3) To enable access to an entire subnet:-  /mnt/myshare {subnetIP}/{subnetMask}(rw,sync,no_subtree_check)
+
+
+#To Make sure NFS share is available to the CLIENT
+We can make shared directory available to client using the "exportfs" command.
+After runnung this command, the NFS Kernel should be restarted.
+
+$sudo exportfs -a     #making file share available
+$sudo systemctl restart nfs-kernel-server   #Restarting the NFS kernel
+
+
+
+#NOW WE'LL SET UP NFS ON CLIENT'S MACHINE AND MOUNT NFS SHARE
+
+$sudo apt update
+$sudo apt install nfs-common
+
+
+#Mounting nfs share temporarily
+-mounting nfs folder to a specific location on the local machine is known as "mount point"
+Using the following commands:-
+
+1) CREATE LOCAL DIRECTORY - This will be the mount point for the NFS Share
+
+$sudo mkdir /var/local-mount
+
+2) Mount the file share by running the mount command
+
+$sudo mount -t nfs {IP of NFS server}:{Folder path on server} /var/local-mount
+For Example:- $sudo mount -t nfs 192.168.0.10:/mnt/myshare /var/local-mount
+
+3) To verify the the NFS share is mounted successfully, run the command
+
+$df -h
+
+
+#MOUNTING NFS file shares permanentaly
+-Remote NFS directories can be automatically mounted when the local system is automatically mounted
+when the local system is started.
+-Can be defined in the " /etc/fstab " file
+
+-To ensure an NFS file share is mounted locally on startup. You need to add a line to this file with relevant file share details.
+
+4) Create local directory that will be used to mount the file share.
+
+$sudo mkdir /var/local-mount
+
+5) Edit the " /etc/fstab " file using the nano command or any text editor.
+
+6) Add a line defining the NFS share . Insert  Tab character between each parameter. IT should appear as one line with no line break.
+
+${IP of NFS-SERVER}:{Folder path on server} /var/local-mount nfs defaults 0 0
+
+
+7) Now mount file share using the following command.
+
+$mount /var/local-mount
+$mount {IP of NFS-SERVER}:{folder path on server}
+
+the next time the system starts, the folder will be mounted automatically.
